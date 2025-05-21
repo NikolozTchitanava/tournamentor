@@ -50,6 +50,39 @@ def init_db():
     db.commit()
     db.close()
 
+def compute_standings(tourn_id, grp):
+    """Return sorted standings list for group."""
+    db = get_db()
+    players = [r['name'] for r in db.execute(
+        "SELECT name FROM player WHERE tourn_id=? AND grp=?",
+        (tourn_id, grp)
+    ).fetchall()]
+    stats = {p: {'MP':0,'W':0,'D':0,'L':0,'GS':0,'GC':0,'Pts':0} for p in players}
+
+    for r in db.execute(
+        "SELECT p1,p2,g1,g2 FROM result WHERE tourn_id=? AND grp=?",
+        (tourn_id, grp)
+    ).fetchall():
+        p1, p2, g1, g2 = r['p1'], r['p2'], r['g1'], r['g2']
+        stats[p1]['MP'] += 1; stats[p2]['MP'] += 1
+        stats[p1]['GS'] += g1; stats[p1]['GC'] += g2
+        stats[p2]['GS'] += g2; stats[p2]['GC'] += g1
+        if g1 > g2:
+            stats[p1]['W'] += 1; stats[p2]['L'] += 1; stats[p1]['Pts'] += 3
+        elif g2 > g1:
+            stats[p2]['W'] += 1; stats[p1]['L'] += 1; stats[p2]['Pts'] += 3
+        else:
+            stats[p1]['D'] += 1; stats[p2]['D'] += 1
+            stats[p1]['Pts'] += 1; stats[p2]['Pts'] += 1
+
+    table = []
+    for p, s in stats.items():
+        s['GD'] = s['GS'] - s['GC']
+        table.append({'team': p, **s})
+    # sort by points, then GD, then GS
+    table.sort(key=lambda x: (x['Pts'], x['GD'], x['GS']), reverse=True)
+    return table
+
 @app.route('/', methods=('GET','POST'))
 def index():
     if request.method == 'POST':
@@ -59,71 +92,52 @@ def index():
         except ValueError:
             flash("Please enter valid integers.")
             return redirect(url_for('index'))
-
         db = get_db()
         cur = db.execute(
             "INSERT INTO tournament (num_pots,num_groups) VALUES (?,?)",
             (num_pots, num_groups)
         )
         db.commit()
-        tourn_id = cur.lastrowid
-        return redirect(url_for('enter_players', tourn_id=tourn_id))
-
+        return redirect(url_for('enter_players', tourn_id=cur.lastrowid))
     return render_template('create_tournament.html')
 
 @app.route('/t/<int:tourn_id>/pots', methods=('GET','POST'))
 def enter_players(tourn_id):
     db = get_db()
-    tourn = db.execute(
-        "SELECT * FROM tournament WHERE id = ?", (tourn_id,)
-    ).fetchone()
+    tourn = db.execute("SELECT * FROM tournament WHERE id=?", (tourn_id,)).fetchone()
     if not tourn:
-        flash("Tournament not found.")
-        return redirect(url_for('index'))
+        flash("Tournament not found."); return redirect(url_for('index'))
 
     if request.method == 'POST':
-        # clear old data
-        db.execute("DELETE FROM player WHERE tourn_id = ?", (tourn_id,))
+        db.execute("DELETE FROM player WHERE tourn_id=?", (tourn_id,))
         db.commit()
-
         G = tourn['num_groups']
-        # collect and shuffle each pot
+        # gather & shuffle each pot
         pots = []
-        for pot_idx in range(1, tourn['num_pots'] + 1):
+        for pot_idx in range(1, tourn['num_pots']+1):
             raw = request.form.get(f'pot_{pot_idx}', '')
             names = [n.strip() for n in raw.splitlines() if n.strip()]
             random.shuffle(names)
             pots.append((pot_idx, names))
-
-        # track total players per group to balance overall sizes
-        group_totals = [0] * G
-
-        # assign each pot's players
+        # track group sizes to minimize variance
+        group_totals = [0]*G
         for pot_idx, names in pots:
             N = len(names)
             q, r = divmod(N, G)
-            # groups sorted by current total (ascending)
-            groups_sorted = sorted(range(G), key=lambda i: group_totals[i])
-            # initial per-group counts for this pot
-            group_pot_sizes = [q] * G
-            # distribute the r extras to the smallest-total groups
-            for i in groups_sorted[:r]:
-                group_pot_sizes[i] += 1
-
-            # assign names to groups according to group_pot_sizes
-            idx0 = 0
-            for g_idx in range(G):
-                cnt = group_pot_sizes[g_idx]
+            # assign extras to currently smallest groups
+            sorted_idxs = sorted(range(G), key=lambda i: group_totals[i])
+            counts = [q]*G
+            for i in sorted_idxs[:r]:
+                counts[i] += 1
+            i0 = 0
+            for gi, cnt in enumerate(counts):
                 for _ in range(cnt):
-                    name = names[idx0]
-                    idx0 += 1
-                    grp_no = g_idx + 1
                     db.execute(
                         "INSERT INTO player (tourn_id,pot,name,grp) VALUES (?,?,?,?)",
-                        (tourn_id, pot_idx, name, grp_no)
+                        (tourn_id, pot_idx, names[i0], gi+1)
                     )
-                    group_totals[g_idx] += 1
-
+                    group_totals[gi] += 1
+                    i0 += 1
         db.commit()
         return redirect(url_for('show_draw', tourn_id=tourn_id))
 
@@ -132,25 +146,27 @@ def enter_players(tourn_id):
 @app.route('/t/<int:tourn_id>/draw')
 def show_draw(tourn_id):
     db = get_db()
-    tourn = db.execute(
-        "SELECT * FROM tournament WHERE id = ?", (tourn_id,)
-    ).fetchone()
+    tourn = db.execute("SELECT * FROM tournament WHERE id=?", (tourn_id,)).fetchone()
     if not tourn:
-        flash("Tournament not found.")
-        return redirect(url_for('index'))
+        flash("Tournament not found."); return redirect(url_for('index'))
 
     rows = db.execute(
-        "SELECT name,pot,grp FROM player WHERE tourn_id = ? ORDER BY grp,pot",
+        "SELECT name,pot,grp FROM player WHERE tourn_id=? ORDER BY grp,pot",
         (tourn_id,)
     ).fetchall()
-
-    groups = {g: [] for g in range(1, tourn['num_groups'] + 1)}
+    groups = {g: [] for g in range(1, tourn['num_groups']+1)}
     for r in rows:
         groups[r['grp']].append((r['name'], r['pot']))
 
-    return render_template('assignments.html',
-                           tourn_id=tourn_id,
-                           groups=groups)
+    # build live standings for every group
+    standings = {g: compute_standings(tourn_id, g) for g in groups}
+
+    return render_template(
+        'assignments.html',
+        tourn_id=tourn_id,
+        groups=groups,
+        standings=standings
+    )
 
 @app.route('/t/<int:tourn_id>/group/<int:grp>/matches', methods=('GET','POST'))
 def enter_results(tourn_id, grp):
@@ -160,20 +176,21 @@ def enter_results(tourn_id, grp):
         (tourn_id, grp)
     ).fetchall()]
     if not players:
-        flash("Group not found or empty.")
-        return redirect(url_for('show_draw', tourn_id=tourn_id))
+        flash("Group not found or empty."); return redirect(url_for('show_draw', tourn_id=tourn_id))
 
     pairings = list(itertools.combinations(players, 2))
-
     if request.method == 'POST':
         for p1, p2 in pairings:
-            g1 = int(request.form[f"{p1}_vs_{p2}_g1"])
-            g2 = int(request.form[f"{p1}_vs_{p2}_g2"])
+            try:
+                g1 = int(request.form[f"{p1}_vs_{p2}_g1"])
+                g2 = int(request.form[f"{p1}_vs_{p2}_g2"])
+            except ValueError:
+                continue
+            # normalize order
             if p1 < p2:
                 a, b, ga, gb = p1, p2, g1, g2
             else:
                 a, b, ga, gb = p2, p1, g2, g1
-
             db.execute("""
               INSERT INTO result (tourn_id,grp,p1,p2,g1,g2)
               VALUES (?,?,?,?,?,?)
@@ -181,8 +198,9 @@ def enter_results(tourn_id, grp):
               DO UPDATE SET g1=excluded.g1,g2=excluded.g2
             """, (tourn_id, grp, a, b, ga, gb))
         db.commit()
-        return redirect(url_for('show_standings', tourn_id=tourn_id, grp=grp))
+        return redirect(url_for('enter_results', tourn_id=tourn_id, grp=grp))
 
+    # load existing results for form prefill
     rows = db.execute(
         "SELECT p1,p2,g1,g2 FROM result WHERE tourn_id=? AND grp=?",
         (tourn_id, grp)
@@ -190,68 +208,28 @@ def enter_results(tourn_id, grp):
     results = {}
     for p1, p2 in pairings:
         key = f"{p1}|{p2}"
-        match = next((r for r in rows if (r['p1'], r['p2']) == (p1, p2)), None)
+        match = next((r for r in rows if (r['p1'],r['p2'])==(p1,p2)), None)
         if match:
             ga, gb = match['g1'], match['g2']
         else:
-            match = next((r for r in rows if (r['p1'], r['p2']) == (p2, p1)), None)
+            match = next((r for r in rows if (r['p1'],r['p2'])==(p2,p1)), None)
             if match:
                 ga, gb = match['g2'], match['g1']
             else:
                 ga = gb = None
         results[key] = (ga, gb)
 
-    return render_template('matches.html',
-                           tourn_id=tourn_id,
-                           grp=grp,
-                           pairings=pairings,
-                           results=results)
+    # live standings for this group
+    standings = compute_standings(tourn_id, grp)
 
-@app.route('/t/<int:tourn_id>/group/<int:grp>/standings')
-def show_standings(tourn_id, grp):
-    db = get_db()
-    players = [r['name'] for r in db.execute(
-        "SELECT name FROM player WHERE tourn_id=? AND grp=?",
-        (tourn_id, grp)
-    ).fetchall()]
-
-    stats = {p: {'MP':0,'W':0,'D':0,'L':0,'GS':0,'GC':0,'Pts':0} for p in players}
-
-    for r in db.execute(
-        "SELECT p1,p2,g1,g2 FROM result WHERE tourn_id=? AND grp=?",
-        (tourn_id, grp)
-    ).fetchall():
-        p1, p2, g1, g2 = r['p1'], r['p2'], r['g1'], r['g2']
-        stats[p1]['MP'] += 1
-        stats[p2]['MP'] += 1
-        stats[p1]['GS'] += g1
-        stats[p1]['GC'] += g2
-        stats[p2]['GS'] += g2
-        stats[p2]['GC'] += g1
-        if g1 > g2:
-            stats[p1]['W'] += 1
-            stats[p2]['L'] += 1
-            stats[p1]['Pts'] += 3
-        elif g2 > g1:
-            stats[p2]['W'] += 1
-            stats[p1]['L'] += 1
-            stats[p2]['Pts'] += 3
-        else:
-            stats[p1]['D'] += 1
-            stats[p2]['D'] += 1
-            stats[p1]['Pts'] += 1
-            stats[p2]['Pts'] += 1
-
-    table = []
-    for p, s in stats.items():
-        s['GD'] = s['GS'] - s['GC']
-        table.append({'team': p, **s})
-    table.sort(key=lambda x: (x['Pts'], x['GD'], x['GS']), reverse=True)
-
-    return render_template('standings.html',
-                           tourn_id=tourn_id,
-                           grp=grp,
-                           table=table)
+    return render_template(
+        'matches.html',
+        tourn_id=tourn_id,
+        grp=grp,
+        pairings=pairings,
+        results=results,
+        standings=standings
+    )
 
 if __name__ == '__main__':
     init_db()

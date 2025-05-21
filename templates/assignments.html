@@ -2,7 +2,7 @@
 <html>
 <head><meta charset="utf-8"><title>Group Draw</title></head>
 <body>
-  <h1>Group Assignments</h1>
+  <h1>Group Assignments & Live Standings</h1>
   {% for grp, members in groups.items() %}
     <h2>Group {{ grp }}</h2>
     <ul>
@@ -10,12 +10,34 @@
         <li>{{ name }} <small>(Pot {{ pot }})</small></li>
       {% endfor %}
     </ul>
+
+    <!-- live standings table -->
+    <table border="1" cellpadding="5">
+      <tr>
+        <th>Team</th><th>MP</th><th>W</th><th>D</th><th>L</th>
+        <th>GS</th><th>GC</th><th>GD</th><th>Pts</th>
+      </tr>
+      {% for row in standings[grp] %}
+      <tr>
+        <td>{{ row.team }}</td>
+        <td>{{ row.MP }}</td>
+        <td>{{ row.W }}</td>
+        <td>{{ row.D }}</td>
+        <td>{{ row.L }}</td>
+        <td>{{ row.GS }}</td>
+        <td>{{ row.GC }}</td>
+        <td>{{ row.GD }}</td>
+        <td>{{ row.Pts }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+
     <p>
-      <a href="{{ url_for('enter_results',
-                          tourn_id=tourn_id, grp=grp) }}">
-        Enter results for Group {{ grp }}
+      <a href="{{ url_for('enter_results', tourn_id=tourn_id, grp=grp) }}">
+        Enter / Edit results for Group {{ grp }}
       </a>
     </p>
+    <hr>
   {% endfor %}
   <p><a href="{{ url_for('index') }}">Start Over</a></p>
 </body>

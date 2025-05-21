@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Enter Players</title>
-</head>
+<head><meta charset="utf-8"><title>Enter Players</title></head>
 <body>
   <h1>Enter Players for Each Pot</h1>
   <form method="post">
@@ -10,9 +8,8 @@
       <fieldset>
         <legend>Pot {{ i }}</legend>
         <textarea name="pot_{{ i }}" rows="5" cols="30"
-          placeholder="One player per line"></textarea>
-      </fieldset>
-      <br>
+                  placeholder="One player per line"></textarea>
+      </fieldset><br>
     {% endfor %}
     <button type="submit">Draw Groups</button>
   </form>

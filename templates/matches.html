@@ -2,7 +2,30 @@
 <html>
 <head><meta charset="utf-8"><title>Enter Scores – Group {{ grp }}</title></head>
 <body>
-  <h1>Enter Scores for Group {{ grp }}</h1>
+  <h1>Group {{ grp }} • Live Standings Below</h1>
+
+  <!-- live standings table -->
+  <table border="1" cellpadding="5">
+    <tr>
+      <th>Team</th><th>MP</th><th>W</th><th>D</th><th>L</th>
+      <th>GS</th><th>GC</th><th>GD</th><th>Pts</th>
+    </tr>
+    {% for row in standings %}
+    <tr>
+      <td>{{ row.team }}</td>
+      <td>{{ row.MP }}</td>
+      <td>{{ row.W }}</td>
+      <td>{{ row.D }}</td>
+      <td>{{ row.L }}</td>
+      <td>{{ row.GS }}</td>
+      <td>{{ row.GC }}</td>
+      <td>{{ row.GD }}</td>
+      <td>{{ row.Pts }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <h2>Enter / Update Scores</h2>
   <form method="post">
     <table border="1" cellpadding="5">
       <tr><th>Match</th><th>Score</th></tr>
@@ -15,22 +38,21 @@
             <input type="number"
                    name="{{p1}}_vs_{{p2}}_g1"
                    min="0"
-                   required
                    style="width:50px"
                    value="{{ g[0] if g[0] is not none else '' }}">
             –
             <input type="number"
                    name="{{p1}}_vs_{{p2}}_g2"
                    min="0"
-                   required
                    style="width:50px"
                    value="{{ g[1] if g[1] is not none else '' }}">
           </td>
         </tr>
       {% endfor %}
     </table>
-    <button type="submit">Save & View Standings</button>
+    <button type="submit">Save & Refresh Standings</button>
   </form>
+
+  <p><a href="{{ url_for('show_draw', tourn_id=tourn_id) }}">← Back to Groups</a></p>
 </body>
 </html>
-
