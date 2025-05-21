@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Standings – Group {{ grp }}</title></head>
+<body>
+  <h1>Standings for Group {{ grp }}</h1>
+  <table border="1" cellpadding="5">
+    <tr>
+      <th>Team</th><th>MP</th><th>W</th><th>D</th><th>L</th>
+      <th>GS</th><th>GC</th><th>GD</th><th>Pts</th>
+    </tr>
+    {% for row in table %}
+      <tr>
+        <td>{{ row.team }}</td>
+        <td>{{ row.MP }}</td>
+        <td>{{ row.W }}</td>
+        <td>{{ row.D }}</td>
+        <td>{{ row.L }}</td>
+        <td>{{ row.GS }}</td>
+        <td>{{ row.GC }}</td>
+        <td>{{ row.GD }}</td>
+        <td>{{ row.Pts }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+  <p><a href="{{ url_for('show_draw', tourn_id=tourn_id) }}">← Back to Groups</a></p>
+</body>
+</html>
