@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Enter Players</title>
+</head>
+<body>
+  <h1>Enter Players for Each Pot</h1>
+  <form method="post">
+    {% for i in range(1, num_pots+1) %}
+      <fieldset>
+        <legend>Pot {{ i }}</legend>
+        <textarea name="pot_{{ i }}" rows="5" cols="30"
+          placeholder="One player per line"></textarea>
+      </fieldset>
+      <br>
+    {% endfor %}
+    <button type="submit">Draw Groups</button>
+  </form>
+</body>
+</html>
