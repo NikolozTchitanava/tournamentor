@@ -1,58 +1,75 @@
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>Enter Scores – Group {{ grp }}</title></head>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Enter Scores &ndash; Group {{ grp }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
 <body>
-  <h1>Group {{ grp }} • Live Standings Below</h1>
+  <div class="container">
+    <h1>Group {{ grp }} &bull; Live Standings</h1>
 
-  <!-- live standings table -->
-  <table border="1" cellpadding="5">
-    <tr>
-      <th>Team</th><th>MP</th><th>W</th><th>D</th><th>L</th>
-      <th>GS</th><th>GC</th><th>GD</th><th>Pts</th>
-    </tr>
-    {% for row in standings %}
-    <tr>
-      <td>{{ row.team }}</td>
-      <td>{{ row.MP }}</td>
-      <td>{{ row.W }}</td>
-      <td>{{ row.D }}</td>
-      <td>{{ row.L }}</td>
-      <td>{{ row.GS }}</td>
-      <td>{{ row.GC }}</td>
-      <td>{{ row.GD }}</td>
-      <td>{{ row.Pts }}</td>
-    </tr>
-    {% endfor %}
-  </table>
-
-  <h2>Enter / Update Scores</h2>
-  <form method="post">
-    <table border="1" cellpadding="5">
-      <tr><th>Match</th><th>Score</th></tr>
-      {% for p1, p2 in pairings %}
-        {% set key = p1 ~ '|' ~ p2 %}
-        {% set g = results[key] %}
+    <!-- live standings table -->
+    <table>
+      <thead>
         <tr>
-          <td>{{ p1 }} vs {{ p2 }}</td>
-          <td>
-            <input type="number"
-                   name="{{p1}}_vs_{{p2}}_g1"
-                   min="0"
-                   style="width:50px"
-                   value="{{ g[0] if g[0] is not none else '' }}">
-            –
-            <input type="number"
-                   name="{{p1}}_vs_{{p2}}_g2"
-                   min="0"
-                   style="width:50px"
-                   value="{{ g[1] if g[1] is not none else '' }}">
-          </td>
+          <th>Team</th><th>MP</th><th>W</th><th>D</th><th>L</th>
+          <th>GS</th><th>GC</th><th>GD</th><th>Pts</th>
         </tr>
-      {% endfor %}
+      </thead>
+      <tbody>
+        {% for row in standings %}
+        <tr>
+          <td>{{ row.team }}</td>
+          <td>{{ row.MP }}</td>
+          <td>{{ row.W }}</td>
+          <td>{{ row.D }}</td>
+          <td>{{ row.L }}</td>
+          <td>{{ row.GS }}</td>
+          <td>{{ row.GC }}</td>
+          <td>{{ row.GD }}</td>
+          <td>{{ row.Pts }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
     </table>
-    <button type="submit">Save & Refresh Standings</button>
-  </form>
 
-  <p><a href="{{ url_for('show_draw', tourn_id=tourn_id) }}">← Back to Groups</a></p>
+    <h2>Enter / Update Scores</h2>
+    <form method="post">
+      <table>
+        <thead>
+          <tr>
+            <th>Match</th><th>Score</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for p1, p2 in pairings %}
+          {% set key = p1 ~ '|' ~ p2 %}
+          {% set g = results[key] %}
+          <tr>
+            <td>{{ p1 }} vs {{ p2 }}</td>
+            <td>
+              <input type="number"
+                     name="{{p1}}_vs_{{p2}}_g1"
+                     min="0"
+                     style="width:4rem"
+                     value="{{ g[0] if g[0] is not none else '' }}">
+              &ndash;
+              <input type="number"
+                     name="{{p1}}_vs_{{p2}}_g2"
+                     min="0"
+                     style="width:4rem"
+                     value="{{ g[1] if g[1] is not none else '' }}">
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+
+      <button type="submit" class="btn">Save & Refresh Standings</button>
+    </form>
+
+    <p><a href="{{ url_for('show_draw', tourn_id=tourn_id) }}">← Back to Groups</a></p>
+  </div>
 </body>
 </html>

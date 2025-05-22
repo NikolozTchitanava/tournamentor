@@ -1,23 +1,38 @@
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>Create Tournament</title></head>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Create Tournament</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
 <body>
-  <h1>Create Tournament</h1>
-  <form method="post">
-    <label>Number of pots:
-      <input type="number" name="num_pots" min="1" required>
-    </label><br>
-    <label>Number of groups:
-      <input type="number" name="num_groups" min="1" required>
-    </label><br>
-    <button type="submit">Next →</button>
-  </form>
-  {% with messages = get_flashed_messages() %}
-    {% if messages %}
-      <ul style="color:red;">
-        {% for m in messages %}<li>{{ m }}</li>{% endfor %}
-      </ul>
-    {% endif %}
-  {% endwith %}
+  <div class="container">
+    <h1>Create Tournament</h1>
+
+    <form method="post">
+      <label>
+        Number of pots:
+        <input type="number" name="num_pots" min="1" required>
+      </label>
+
+      <label>
+        Number of groups:
+        <input type="number" name="num_groups" min="1" required>
+      </label>
+
+      <button type="submit" class="btn">Next →</button>
+    </form>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul style="color:red; margin-top:1rem;">
+          {% for m in messages %}
+            <li>{{ m }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+  </div>
 </body>
 </html>

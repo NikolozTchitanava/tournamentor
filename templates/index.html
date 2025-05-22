@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Your Tournaments</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>Your Tournaments</h1>
+
+    <ul>
+      {% for t in tournaments %}
+        <li>
+          <strong>{{ t.name }}</strong>
+          (Pots: {{ t.num_pots }}, Groups: {{ t.num_groups }})
+          [<a href="{{ url_for('enter_players', tourn_id=t.id) }}">Edit Players</a>]
+          [<a href="{{ url_for('show_draw', tourn_id=t.id) }}">View Groups</a>]
+          <form method="post"
+                action="{{ url_for('delete_tournament', tourn_id=t.id) }}"
+                class="tourn-actions"
+                onsubmit="return confirm('Delete this tournament?');">
+            <button type="submit" class="btn btn-small">Delete</button>
+          </form>
+        </li>
+      {% else %}
+        <li><em>No tournaments yet.</em></li>
+      {% endfor %}
+    </ul>
+
+    <hr>
+
+    <h2>Create New Tournament</h2>
+    <form method="post">
+      <label>Name:
+        <input type="text" name="name" required>
+      </label>
+      <label>Pots:
+        <input type="number" name="num_pots" min="1" required>
+      </label>
+      <label>Groups:
+        <input type="number" name="num_groups" min="1" required>
+      </label>
+      <button type="submit" class="btn">Create Tournament</button>
+    </form>
+
+    {% with msgs = get_flashed_messages() %}
+      {% if msgs %}
+        <ul style="color:red; margin-top:1rem;">
+          {% for m in msgs %}
+            <li>{{ m }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+  </div>
+</body>
+</html>

@@ -1,0 +1,210 @@
+/* static/style.css */
+
+/* ─────────────────────────────────────────────
+   Color Palette
+───────────────────────────────────────────── */
+:root {
+  --purple:    #5e00ff;   /* main brand purple */
+  --purple-dark: #4a00cc;
+  --white:     #ffffff;
+  --gray-light: #f5f5f5;
+  --gray-med:   #e0e0e0;
+  --gray-dark:  #333333;
+  --text:      #222222;
+}
+
+/* ─────────────────────────────────────────────
+   Global resets & typography
+───────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Segoe UI", Roboto, sans-serif;
+  background: var(--gray-light);
+  color: var(--text);
+  line-height: 1.6;
+  padding: 1rem;
+}
+
+a {
+  color: var(--purple-dark);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* ─────────────────────────────────────────────
+   Container
+───────────────────────────────────────────── */
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  background: var(--white);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  padding: 2rem;
+}
+
+/* ─────────────────────────────────────────────
+   Headings
+───────────────────────────────────────────── */
+h1, h2, h3 {
+  color: var(--purple-dark);
+  margin-bottom: 1rem;
+}
+
+h1 { font-size: 2rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.25rem; }
+
+/* ─────────────────────────────────────────────
+   Forms & Inputs
+───────────────────────────────────────────── */
+form {
+  margin-top: 1rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+input[type="text"],
+input[type="number"],
+textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--gray-med);
+  border-radius: 4px;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  transition: border-color .2s;
+}
+
+input:focus,
+textarea:focus {
+  border-color: var(--purple);
+  outline: none;
+}
+
+button, .btn {
+  display: inline-block;
+  background: var(--purple);
+  color: var(--white);
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background .2s, transform .1s;
+  text-align: center;
+}
+
+button:hover, .btn:hover {
+  background: var(--purple-dark);
+}
+
+button:active, .btn:active {
+  transform: scale(0.98);
+}
+
+/* ─────────────────────────────────────────────
+   Tables
+───────────────────────────────────────────── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+th, td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--gray-med);
+}
+
+th {
+  background: var(--purple);
+  color: var(--white);
+  text-transform: uppercase;
+  font-size: 0.9rem;
+}
+
+tr:nth-child(even) {
+  background: var(--gray-light);
+}
+
+/* ─────────────────────────────────────────────
+   Lists & links
+───────────────────────────────────────────── */
+ul {
+  margin: 1rem 0;
+  padding-left: 1.2rem;
+}
+
+li {
+  margin-bottom: 0.5rem;
+}
+
+/* ─────────────────────────────────────────────
+   Buttons in list (delete, edit)
+───────────────────────────────────────────── */
+.tourn-actions form {
+  display: inline;
+}
+.tourn-actions .btn-small {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.85rem;
+  margin-left: 0.5rem;
+}
+
+/* ─────────────────────────────────────────────
+   Fieldsets (pots page)
+───────────────────────────────────────────── */
+fieldset {
+  border: 1px solid var(--gray-med);
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: var(--white);
+}
+
+legend {
+  font-weight: 600;
+  color: var(--purple-dark);
+}
+
+/* ─────────────────────────────────────────────
+   Footer / Reset Link
+───────────────────────────────────────────── */
+.footer {
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 0.9rem;
+  color: var(--gray-dark);
+}
+.footer a {
+  color: var(--purple);
+}
+
+/* ─────────────────────────────────────────────
+   Responsive tweaks
+───────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .container {
+    padding: 1rem;
+  }
+  table, th, td {
+    font-size: 0.9rem;
+  }
+  button, .btn {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+}
